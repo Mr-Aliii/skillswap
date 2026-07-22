@@ -1,27 +1,131 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // ============================
+    // USER PROFILES
+    // ============================
+    // Users can read any profile, but only create/update/delete their own
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
+    
+    // ============================
+    // CONNECTION REQUESTS
+    // ============================
+    // Connection requests between users (sender -> receiver)
+    match /connection_requests/{requestId} {
+      // Allow read if user is sender or receiver
+      allow read: if request.auth != null && 
+                  (request.auth.uid == resource.data.senderId || 
+                   request.auth.uid == resource.data.receiverId);
+      
+      // Allow create if user is the sender
+      allow create: if request.auth != null && 
+                    request.auth.uid == request.resource.data.senderId;
+      
+      // Allow update if user is the receiver (to accept/decline)
+      allow update: if request.auth != null && 
+                    request.auth.uid == resource.data.receiverId;
+      
+      // Allow delete if user is sender (cancel) or receiver (decline)
+      allow delete: if request.auth != null && 
+                    (request.auth.uid == resource.data.senderId || 
+                     request.auth.uid == resource.data.receiverId);
+    }
+    
+    // ============================
+    // CHATS & MESSAGES
+    // ============================
+    // Chat conversations - only participants can access
     match /chats/{chatId} {
-      allow read, write: if request.auth != null
-        && request.auth.uid in resource.data.participantIds;
+      allow read, write: if request.auth != null && 
+                         request.auth.uid in resource.data.participantIds;
+      
+      // Messages subcollection - any authenticated user who is in the chat
       match /messages/{messageId} {
-        allow read, write: if request.auth != null;
+        allow read: if request.auth != null;
+        allow create: if request.auth != null;
+        allow update, delete: if request.auth != null && 
+                              request.auth.uid == resource.data.senderId;
       }
     }
+    
+    // ============================
+    // BOOKINGS
+    // ============================
+    // Session bookings - both requester and host can access
     match /bookings/{bookingId} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null && 
+                  (request.auth.uid == resource.data.requesterId || 
+                   request.auth.uid == resource.data.hostId);
+      allow create: if request.auth != null && 
+                    request.auth.uid == request.resource.data.requesterId;
+      allow update: if request.auth != null && 
+                    (request.auth.uid == resource.data.requesterId || 
+                     request.auth.uid == resource.data.hostId);
+      allow delete: if request.auth != null && 
+                    (request.auth.uid == resource.data.requesterId || 
+                     request.auth.uid == resource.data.hostId);
     }
+    
+    // ============================
+    // NOTIFICATIONS
+    // ============================
+    // Notifications - only the owner can access
     match /notifications/{notificationId} {
-      allow read, write: if request.auth != null
-        && request.auth.uid == resource.data.userId;
+      allow read: if request.auth != null && 
+                  request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && 
+                    request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && 
+                            request.auth.uid == resource.data.userId;
     }
+    
+    // ============================
+    // SKILLS
+    // ============================
+    // Skills catalog - anyone can read, authenticated users can write
     match /skills/{skillId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null;
+    }
+    
+    // ============================
+    // PREMIUM SUBSCRIPTIONS
+    // ============================
+    // Premium subscriptions - only the owner can access
+    match /premium_subscriptions/{subscriptionId} {
+      allow read: if request.auth != null && 
+                  request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && 
+                    request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && 
+                            request.auth.uid == resource.data.userId;
+    }
+    
+    // ============================
+    // REVIEWS
+    // ============================
+    // Reviews - anyone can read, only authenticated users can create their own
+    match /reviews/{reviewId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && 
+                    request.auth.uid == request.resource.data.reviewerId;
+      allow update, delete: if request.auth != null && 
+                            request.auth.uid == resource.data.reviewerId;
+    }
+    
+    // ============================
+    // DEFAULT DENY
+    // ============================
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -10,6 +10,7 @@ import 'package:skill_swap/providers/profile_provider.dart';
 import 'package:skill_swap/widgets/common/app_text_field.dart';
 import 'package:skill_swap/widgets/common/gradient_button.dart';
 import 'package:skill_swap/widgets/common/skill_chip.dart';
+import 'package:skill_swap/widgets/common/skill_picker_bottom_sheet.dart';
 
 /// Edit profile: photo, bio, skills, experience level.
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -22,8 +23,6 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _bioController;
-  final _skillTeachController = TextEditingController();
-  final _skillLearnController = TextEditingController();
   String _experienceLevel = 'Intermediate';
   bool _saving = false;
 
@@ -40,15 +39,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   void dispose() {
     _nameController.dispose();
     _bioController.dispose();
-    _skillTeachController.dispose();
-    _skillLearnController.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage() async {
     final xfile = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (xfile == null) return;
-    if (AppConfig.useDemoMode) {
+    if (AppConfig.isDemoMode) {
       if (mounted) context.showSnack('Photo updated (demo mode)');
       return;
     }
@@ -56,27 +53,33 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (mounted) context.showSnack('Photo uploaded');
   }
 
-  void _addSkillTeach() {
-    final skill = _skillTeachController.text.trim();
-    if (skill.isEmpty) return;
+  Future<void> _pickSkillsTeach() async {
     final user = ref.read(profileEditProvider);
     if (user == null) return;
+    final selected = await SkillPickerBottomSheet.show(
+      context,
+      alreadySelected: user.skillsTeach,
+      maxSelections: AppConstants.maxSkillsPerCategory,
+      isTeach: true,
+    );
     ref.read(profileEditProvider.notifier).updateLocal(
-          user.copyWith(skillsTeach: [...user.skillsTeach, skill]),
-        );
-    _skillTeachController.clear();
+      user.copyWith(skillsTeach: selected),
+    );
     setState(() {});
   }
 
-  void _addSkillLearn() {
-    final skill = _skillLearnController.text.trim();
-    if (skill.isEmpty) return;
+  Future<void> _pickSkillsLearn() async {
     final user = ref.read(profileEditProvider);
     if (user == null) return;
+    final selected = await SkillPickerBottomSheet.show(
+      context,
+      alreadySelected: user.skillsLearn,
+      maxSelections: AppConstants.maxSkillsPerCategory,
+      isTeach: false,
+    );
     ref.read(profileEditProvider.notifier).updateLocal(
-          user.copyWith(skillsLearn: [...user.skillsLearn, skill]),
-        );
-    _skillLearnController.clear();
+      user.copyWith(skillsLearn: selected),
+    );
     setState(() {});
   }
 
@@ -157,96 +160,136 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     onChanged: (v) => setState(() => _experienceLevel = v!),
                   ),
                   const SizedBox(height: 24),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Skills I Teach',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Wrap(
-                    spacing: 8,
-                    children: user.skillsTeach
-                        .map(
-                          (s) => SkillChip(
-                            label: s,
-                            onDeleted: () {
-                              ref
-                                  .read(profileEditProvider.notifier)
-                                  .updateLocal(
-                                    user.copyWith(
-                                      skillsTeach: user.skillsTeach
-                                          .where((x) => x != s)
-                                          .toList(),
-                                    ),
-                                  );
-                              setState(() {});
-                            },
-                          ),
-                        )
-                        .toList(),
-                  ),
+                  // ── Skills I Teach ──
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _skillTeachController,
-                          decoration:
-                              const InputDecoration(hintText: 'Add skill'),
-                        ),
+                      const Text(
+                        'Skills I Teach',
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      IconButton(
-                        onPressed: _addSkillTeach,
-                        icon: const Icon(Icons.add_circle),
+                      TextButton.icon(
+                        onPressed: _pickSkillsTeach,
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add Skills'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Skills I Want to Learn',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Wrap(
-                    spacing: 8,
-                    children: user.skillsLearn
-                        .map(
-                          (s) => SkillChip(
-                            label: s,
-                            isTeach: false,
-                            onDeleted: () {
-                              ref
-                                  .read(profileEditProvider.notifier)
-                                  .updateLocal(
-                                    user.copyWith(
-                                      skillsLearn: user.skillsLearn
-                                          .where((x) => x != s)
-                                          .toList(),
-                                    ),
-                                  );
-                              setState(() {});
-                            },
-                          ),
-                        )
-                        .toList(),
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _skillLearnController,
-                          decoration:
-                              const InputDecoration(hintText: 'Add skill'),
+                  const SizedBox(height: 4),
+                  if (user.skillsTeach.isEmpty)
+                    GestureDetector(
+                      onTap: _pickSkillsTeach,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: Colors.grey.shade300,
+                              style: BorderStyle.solid),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(Icons.add_circle_outline,
+                                size: 32, color: Colors.grey.shade400),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tap to add skills you can teach',
+                              style: TextStyle(color: Colors.grey.shade500),
+                            ),
+                          ],
                         ),
                       ),
-                      IconButton(
-                        onPressed: _addSkillLearn,
-                        icon: const Icon(Icons.add_circle),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      children: user.skillsTeach
+                          .map(
+                            (s) => SkillChip(
+                              label: s,
+                              onDeleted: () {
+                                ref
+                                    .read(profileEditProvider.notifier)
+                                    .updateLocal(
+                                      user.copyWith(
+                                        skillsTeach: user.skillsTeach
+                                            .where((x) => x != s)
+                                            .toList(),
+                                      ),
+                                    );
+                                setState(() {});
+                              },
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  const SizedBox(height: 24),
+                  // ── Skills I Want to Learn ──
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Skills I Want to Learn',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      TextButton.icon(
+                        onPressed: _pickSkillsLearn,
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add Skills'),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 4),
+                  if (user.skillsLearn.isEmpty)
+                    GestureDetector(
+                      onTap: _pickSkillsLearn,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: Colors.grey.shade300,
+                              style: BorderStyle.solid),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(Icons.add_circle_outline,
+                                size: 32, color: Colors.grey.shade400),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tap to add skills you want to learn',
+                              style: TextStyle(color: Colors.grey.shade500),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      children: user.skillsLearn
+                          .map(
+                            (s) => SkillChip(
+                              label: s,
+                              isTeach: false,
+                              onDeleted: () {
+                                ref
+                                    .read(profileEditProvider.notifier)
+                                    .updateLocal(
+                                      user.copyWith(
+                                        skillsLearn: user.skillsLearn
+                                            .where((x) => x != s)
+                                            .toList(),
+                                      ),
+                                    );
+                                setState(() {});
+                              },
+                            ),
+                          )
+                          .toList(),
+                    ),
                   const SizedBox(height: 32),
                   GradientButton(
                     label: 'Save Profile',

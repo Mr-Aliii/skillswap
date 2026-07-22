@@ -10,6 +10,8 @@ class ChatModel {
     this.otherUserPhoto,
     this.otherUserId = '',
     this.isOtherOnline = false,
+    this.names,
+    this.photoUrls,
   });
 
   final String id;
@@ -21,18 +23,46 @@ class ChatModel {
   final String? otherUserPhoto;
   final String otherUserId;
   final bool isOtherOnline;
+  final Map<String, String>? names;
+  final Map<String, String>? photoUrls;
 
-  factory ChatModel.fromMap(Map<String, dynamic> map, String id) {
+  factory ChatModel.fromMap(Map<String, dynamic> map, String id, {String? currentUserId}) {
+    final participantIds = List<String>.from(map['participantIds'] as List? ?? []);
+    
+    String otherId = map['otherUserId'] as String? ?? '';
+    String otherName = map['otherUserName'] as String? ?? '';
+    String? otherPhoto = map['otherUserPhoto'] as String?;
+    
+    if (currentUserId != null && participantIds.length == 2) {
+      final resolvedOtherId = participantIds.firstWhere(
+        (uid) => uid != currentUserId,
+        orElse: () => '',
+      );
+      if (resolvedOtherId.isNotEmpty) {
+        otherId = resolvedOtherId;
+        final namesMap = map['names'] as Map?;
+        if (namesMap != null && namesMap.containsKey(resolvedOtherId)) {
+          otherName = namesMap[resolvedOtherId] as String? ?? otherName;
+        }
+        final photosMap = map['photoUrls'] as Map?;
+        if (photosMap != null && photosMap.containsKey(resolvedOtherId)) {
+          otherPhoto = photosMap[resolvedOtherId] as String? ?? otherPhoto;
+        }
+      }
+    }
+
     return ChatModel(
       id: id,
-      participantIds: List<String>.from(map['participantIds'] as List? ?? []),
+      participantIds: participantIds,
       lastMessage: map['lastMessage'] as String? ?? '',
       lastMessageAt: _parseDate(map['lastMessageAt']),
       unreadCount: map['unreadCount'] as int? ?? 0,
-      otherUserName: map['otherUserName'] as String? ?? '',
-      otherUserPhoto: map['otherUserPhoto'] as String?,
-      otherUserId: map['otherUserId'] as String? ?? '',
+      otherUserName: otherName,
+      otherUserPhoto: otherPhoto,
+      otherUserId: otherId,
       isOtherOnline: map['isOtherOnline'] as bool? ?? false,
+      names: map['names'] != null ? Map<String, String>.from(map['names'] as Map) : null,
+      photoUrls: map['photoUrls'] != null ? Map<String, String>.from(map['photoUrls'] as Map) : null,
     );
   }
 
@@ -45,6 +75,8 @@ class ChatModel {
         'otherUserPhoto': otherUserPhoto,
         'otherUserId': otherUserId,
         'isOtherOnline': isOtherOnline,
+        if (names != null) 'names': names,
+        if (photoUrls != null) 'photoUrls': photoUrls,
       };
 
   static DateTime? _parseDate(dynamic value) {

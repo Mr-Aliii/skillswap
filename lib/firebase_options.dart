@@ -54,7 +54,7 @@ class DefaultFirebaseOptions {
     appId: '1:2081006226:web:2dda5dceaf8efb1d2cbc4b',
     messagingSenderId: '2081006226',
     projectId: 'skillswap-3e33f',
-    authDomain: 'skillswap-3e33f.firebaseapp.com',
+    authDomain: 'localhost',
     storageBucket: 'skillswap-3e33f.firebasestorage.app',
   );
 
@@ -65,4 +65,5 @@ class DefaultFirebaseOptions {
     projectId: 'skillswap-3e33f',
     storageBucket: 'skillswap-3e33f.firebasestorage.app',
   );
+
 }

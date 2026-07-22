@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skill_swap/config/app_config.dart';
+import 'package:skill_swap/config/firebase_config.dart';
 import 'package:skill_swap/providers/auth_provider.dart';
 import 'package:skill_swap/providers/theme_provider.dart';
 import 'package:skill_swap/routes/app_routes.dart';
@@ -39,16 +40,32 @@ class SettingsScreen extends ConsumerWidget {
               style: TextStyle(color: Theme.of(context).hintColor),
             ),
           ),
-          if (AppConfig.useDemoMode)
+          if (AppConfig.isDemoMode)
             const Padding(
               padding: EdgeInsets.all(16),
               child: Card(
                 color: Color(0xFFFFF7ED),
                 child: ListTile(
-                  leading: Icon(Icons.info_outline, color: AppColors.warning),
-                  title: Text('Demo Mode'),
+                  leading:
+                      Icon(Icons.info_outline, color: AppColors.warning),
+                  title: Text('Demo Mode Active'),
                   subtitle: Text(
-                    'Firebase is disabled. Set useDemoMode to false after configuring Firebase.',
+                    'Set useDemoMode to false in app_config.dart to use Firebase.',
+                  ),
+                ),
+              ),
+            )
+          else if (!FirebaseConfig.hasRealCredentials)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Card(
+                color: Color(0xFFFEE2E2),
+                child: ListTile(
+                  leading: Icon(Icons.warning_amber, color: AppColors.error),
+                  title: Text('Firebase not configured'),
+                  subtitle: Text(
+                    'Run: flutterfire configure\n'
+                    'Auth will fail until real API keys are added.',
                   ),
                 ),
               ),
@@ -56,10 +73,23 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           _SectionHeader(title: 'Account'),
           ListTile(
+            leading: const Icon(Icons.workspace_premium, color: Color(0xFFD97706)),
+            title: const Text('Premium Badge'),
+            subtitle: const Text('Get verified & top visibility'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.pushNamed(context, AppRoutes.premium),
+          ),
+          ListTile(
             leading: const Icon(Icons.person_outline),
             title: const Text('Edit Profile'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
+          ),
+          ListTile(
+            leading: const Icon(Icons.event_available),
+            title: const Text('My Bookings'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.pushNamed(context, AppRoutes.myBookings),
           ),
           ListTile(
             leading: const Icon(Icons.notifications_outlined),

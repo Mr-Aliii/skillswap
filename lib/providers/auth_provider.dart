@@ -12,7 +12,19 @@ final currentUserProfileProvider =
     FutureProvider<UserModel?>((ref) async {
   final authUser = ref.watch(authStateProvider).valueOrNull;
   if (authUser == null) return null;
-  return ref.watch(userServiceProvider).getUser(authUser.uid);
+  final userService = ref.watch(userServiceProvider);
+  var profile = await userService.getUser(authUser.uid);
+  if (profile == null && authUser.email != null) {
+    profile = UserModel(
+      id: authUser.uid,
+      email: authUser.email!,
+      name: authUser.displayName ?? authUser.email!.split('@').first,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+    await userService.createUser(profile);
+  }
+  return profile;
 });
 
 final authControllerProvider =

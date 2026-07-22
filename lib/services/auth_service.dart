@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:skill_swap/config/app_config.dart';
 import 'package:skill_swap/core/errors/app_exception.dart';
+import 'package:skill_swap/firebase/messaging_service.dart';
 import 'package:skill_swap/models/user_model.dart';
 import 'package:skill_swap/services/user_service.dart';
 import 'package:skill_swap/utils/dummy_data.dart';
@@ -11,7 +12,7 @@ import 'package:skill_swap/utils/dummy_data.dart';
 class AuthService {
   AuthService({UserService? userService})
       : _userService = userService ?? UserService() {
-    if (AppConfig.useDemoMode) {
+    if (AppConfig.isDemoMode) {
       _demoAuthController.add(null);
     }
   }
@@ -21,21 +22,21 @@ class AuthService {
   final _demoAuthController = StreamController<User?>.broadcast();
 
   Stream<User?> get authStateChanges {
-    if (AppConfig.useDemoMode) {
+    if (AppConfig.isDemoMode) {
       return _demoAuthController.stream;
     }
     return FirebaseAuth.instance.authStateChanges();
   }
 
   User? get currentUser {
-    if (AppConfig.useDemoMode) return _demoUser;
+    if (AppConfig.isDemoMode) return _demoUser;
     return FirebaseAuth.instance.currentUser;
   }
 
   void _emitDemoUser() => _demoAuthController.add(_demoUser);
 
   Future<UserModel?> signIn(String email, String password) async {
-    if (AppConfig.useDemoMode) {
+    if (AppConfig.isDemoMode) {
       await Future<void>.delayed(const Duration(milliseconds: 800));
       _demoUser = _MockUser(email);
       _emitDemoUser();
@@ -57,7 +58,7 @@ class AuthService {
     required String password,
     required String name,
   }) async {
-    if (AppConfig.useDemoMode) {
+    if (AppConfig.isDemoMode) {
       await Future<void>.delayed(const Duration(milliseconds: 800));
       _demoUser = _MockUser(email);
       _emitDemoUser();
@@ -83,7 +84,7 @@ class AuthService {
   }
 
   Future<void> resetPassword(String email) async {
-    if (AppConfig.useDemoMode) {
+    if (AppConfig.isDemoMode) {
       await Future<void>.delayed(const Duration(milliseconds: 600));
       return;
     }
@@ -95,11 +96,12 @@ class AuthService {
   }
 
   Future<void> signOut() async {
-    if (AppConfig.useDemoMode) {
+    if (AppConfig.isDemoMode) {
       _demoUser = null;
       _emitDemoUser();
       return;
     }
+    await MessagingService.deleteToken();
     await FirebaseAuth.instance.signOut();
   }
 
@@ -115,6 +117,9 @@ class AuthService {
         return 'Password is too weak.';
       case 'invalid-email':
         return 'Invalid email address.';
+      case 'invalid-api-key':
+      case 'api-key-not-valid.-invalid':
+        return 'Firebase API key is invalid. Run: flutterfire configure';
       default:
         return 'Authentication failed. Please try again.';
     }

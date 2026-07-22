@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:skill_swap/core/constants/app_constants.dart';
 import 'package:skill_swap/models/skill_model.dart';
 import 'package:skill_swap/theme/app_colors.dart';
@@ -82,7 +81,7 @@ class SkillCard extends StatelessWidget {
             ),
           ],
         ),
-      ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95)),
+      ),
     );
   }
 }

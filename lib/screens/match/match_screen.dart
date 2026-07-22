@@ -3,12 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skill_swap/core/constants/app_constants.dart';
 import 'package:skill_swap/core/extensions/context_extensions.dart';
 import 'package:skill_swap/models/user_model.dart';
+import 'package:skill_swap/providers/auth_provider.dart';
 import 'package:skill_swap/providers/home_provider.dart';
 import 'package:skill_swap/routes/app_routes.dart';
 import 'package:skill_swap/theme/app_colors.dart';
 import 'package:skill_swap/widgets/common/empty_state.dart';
 import 'package:skill_swap/widgets/common/gradient_button.dart';
 import 'package:skill_swap/widgets/common/skill_chip.dart';
+import 'package:skill_swap/widgets/premium/premium_badge_chip.dart';
+import 'package:skill_swap/widgets/premium/user_avatar_badge.dart';
+import 'package:skill_swap/widgets/premium/user_display_name.dart';
+import 'package:skill_swap/widgets/common/connection_action_buttons.dart';
 
 /// Browse users and request skill exchanges.
 class MatchScreen extends ConsumerWidget {
@@ -17,6 +22,7 @@ class MatchScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final usersAsync = ref.watch(recommendedUsersProvider);
+    final currentUser = ref.watch(currentUserProfileProvider).valueOrNull;
 
     return Scaffold(
       appBar: AppBar(
@@ -44,7 +50,7 @@ class MatchScreen extends ConsumerWidget {
               itemCount: users.length,
               itemBuilder: (context, index) {
                 final user = users[index];
-                return _MatchCard(user: user);
+                return _MatchCard(user: user, currentUser: currentUser);
               },
             ),
           );
@@ -60,14 +66,44 @@ class MatchScreen extends ConsumerWidget {
 }
 
 class _MatchCard extends StatelessWidget {
-  const _MatchCard({required this.user});
+  const _MatchCard({required this.user, this.currentUser});
 
   final UserModel user;
+  final UserModel? currentUser;
+
+  /// Skills that match: I want to learn ↔ they teach
+  List<String> get _theyTeachWhatIWant {
+    if (currentUser == null) return [];
+    return currentUser!.skillsLearn
+        .where((s) => user.skillsTeach.contains(s))
+        .toList();
+  }
+
+  /// Skills that match: I teach ↔ they want to learn
+  List<String> get _iTeachWhatTheyWant {
+    if (currentUser == null) return [];
+    return currentUser!.skillsTeach
+        .where((s) => user.skillsLearn.contains(s))
+        .toList();
+  }
+
+  int get _matchCount => _theyTeachWhatIWant.length + _iTeachWhatTheyWant.length;
 
   @override
   Widget build(BuildContext context) {
+    final isPremium = user.showVerifiedBadge;
+    final hasMatch = _matchCount > 0;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: isPremium
+            ? const BorderSide(color: Color(0xFFF59E0B), width: 1.5)
+            : hasMatch
+            ? BorderSide(color: AppColors.primary.withValues(alpha: 0.4), width: 1)
+            : BorderSide.none,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -75,45 +111,13 @@ class _MatchCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                  child: Text(
-                    user.name[0].toUpperCase(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                      fontSize: 20,
-                    ),
-                  ),
-                ),
+                UserAvatarBadge(user: user, radius: 28),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            user.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          if (user.isOnline) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.success,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
+                      UserDisplayName(user: user, showPremiumChip: false),
                       Text(
                         user.experienceLevel,
                         style: TextStyle(
@@ -124,6 +128,34 @@ class _MatchCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (_matchCount > 0)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.primary, AppColors.accent],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.swap_horiz,
+                            size: 14, color: Colors.white),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$_matchCount match${_matchCount > 1 ? 'es' : ''}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (isPremium) const PremiumBadgeChip(compact: true),
                 IconButton(
                   onPressed: () => Navigator.pushNamed(
                     context,
@@ -141,6 +173,59 @@ class _MatchCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: context.theme.hintColor),
+              ),
+            ],
+            // Match reason section
+            if (_theyTeachWhatIWant.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.school, size: 16, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Can teach you: ${_theyTeachWhatIWant.join(', ')}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            if (_iTeachWhatTheyWant.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.lightbulb, size: 16, color: AppColors.accent),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Wants to learn from you: ${_iTeachWhatTheyWant.join(', ')}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.accent,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
             const SizedBox(height: 12),
@@ -165,13 +250,7 @@ class _MatchCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      context.showSnack('Connected with ${user.name}!');
-                    },
-                    icon: const Icon(Icons.person_add_outlined, size: 18),
-                    label: const Text('Connect'),
-                  ),
+                  child: ConnectionActionButtons(targetUser: user),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

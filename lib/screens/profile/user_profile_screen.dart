@@ -4,8 +4,12 @@ import 'package:skill_swap/core/constants/app_constants.dart';
 import 'package:skill_swap/providers/service_providers.dart';
 import 'package:skill_swap/routes/app_routes.dart';
 import 'package:skill_swap/theme/app_colors.dart';
+import 'package:skill_swap/widgets/premium/premium_badge_chip.dart';
+import 'package:skill_swap/widgets/premium/user_avatar_badge.dart';
+import 'package:skill_swap/widgets/premium/user_display_name.dart';
 import 'package:skill_swap/widgets/common/gradient_button.dart';
 import 'package:skill_swap/widgets/common/skill_chip.dart';
+import 'package:skill_swap/widgets/common/connection_action_buttons.dart';
 
 /// View another user's public profile.
 class UserProfileScreen extends ConsumerWidget {
@@ -36,24 +40,21 @@ class UserProfileScreen extends ConsumerWidget {
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
-                    decoration: const BoxDecoration(
-                      gradient: AppColors.primaryGradient,
+                    decoration: BoxDecoration(
+                      gradient: user.showVerifiedBadge
+                          ? const LinearGradient(
+                              colors: [
+                                Color(0xFFF59E0B),
+                                Color(0xFFD97706),
+                                AppColors.primary,
+                              ],
+                            )
+                          : AppColors.primaryGradient,
                     ),
                     child: Center(
                       child: Hero(
                         tag: 'user_$userId',
-                        child: CircleAvatar(
-                          radius: 48,
-                          backgroundColor: Colors.white,
-                          child: Text(
-                            user.name[0].toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
+                        child: UserAvatarBadge(user: user, radius: 48),
                       ),
                     ),
                   ),
@@ -65,13 +66,17 @@ class UserProfileScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        user.name,
+                      UserDisplayName(
+                        user: user,
                         style: Theme.of(context)
                             .textTheme
                             .headlineSmall
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
+                      if (user.showVerifiedBadge) ...[
+                        const SizedBox(height: 8),
+                        const PremiumBadgeChip(),
+                      ],
                       Text(
                         '${user.experienceLevel} • ⭐ ${user.rating}',
                         style: TextStyle(color: Theme.of(context).hintColor),
@@ -99,17 +104,28 @@ class UserProfileScreen extends ConsumerWidget {
                             .toList(),
                       ),
                       const SizedBox(height: 32),
-                      GradientButton(
-                        label: 'Request Exchange',
-                        icon: Icons.swap_horiz,
-                        onPressed: () => Navigator.pushNamed(
-                          context,
-                          AppRoutes.bookSession,
-                          arguments: {
-                            'targetUserId': user.id,
-                            'targetUserName': user.name,
-                          },
-                        ),
+                      const SizedBox(height: 32),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ConnectionActionButtons(targetUser: user),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: GradientButton(
+                              label: 'Exchange',
+                              icon: Icons.swap_horiz,
+                              onPressed: () => Navigator.pushNamed(
+                                context,
+                                AppRoutes.bookSession,
+                                arguments: {
+                                  'targetUserId': user.id,
+                                  'targetUserName': user.name,
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

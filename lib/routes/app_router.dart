@@ -4,10 +4,12 @@ import 'package:skill_swap/screens/auth/forgot_password_screen.dart';
 import 'package:skill_swap/screens/auth/login_screen.dart';
 import 'package:skill_swap/screens/auth/register_screen.dart';
 import 'package:skill_swap/screens/booking/book_session_screen.dart';
+import 'package:skill_swap/screens/booking/my_bookings_screen.dart';
 import 'package:skill_swap/screens/chat/chat_screen.dart';
 import 'package:skill_swap/screens/main/main_shell_screen.dart';
 import 'package:skill_swap/screens/notifications/notifications_screen.dart';
 import 'package:skill_swap/screens/onboarding/onboarding_screen.dart';
+import 'package:skill_swap/screens/premium/premium_screen.dart';
 import 'package:skill_swap/screens/profile/edit_profile_screen.dart';
 import 'package:skill_swap/screens/profile/user_profile_screen.dart';
 import 'package:skill_swap/screens/settings/about_screen.dart';
@@ -46,6 +48,8 @@ class AppRouter {
           targetUserId: args?['targetUserId'] as String? ?? '',
           targetUserName: args?['targetUserName'] as String? ?? 'User',
         ));
+      case AppRoutes.myBookings:
+        return _slide(const MyBookingsScreen());
       case AppRoutes.notifications:
         return _slide(const NotificationsScreen());
       case AppRoutes.about:
@@ -55,6 +59,8 @@ class AppRouter {
         return _slide(UserProfileScreen(
           userId: args?['userId'] as String? ?? '',
         ));
+      case AppRoutes.premium:
+        return _slide(const PremiumScreen());
       default:
         return _fade(const SplashScreen());
     }

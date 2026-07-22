@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skill_swap/services/auth_service.dart';
 import 'package:skill_swap/services/booking_service.dart';
 import 'package:skill_swap/services/chat_service.dart';
+import 'package:skill_swap/services/connection_service.dart';
 import 'package:skill_swap/services/notification_service.dart';
 import 'package:skill_swap/services/user_service.dart';
 
@@ -18,3 +19,11 @@ final bookingServiceProvider =
 
 final notificationServiceProvider =
     Provider<NotificationService>((ref) => NotificationService());
+
+final connectionServiceProvider = Provider<ConnectionService>((ref) {
+  return ConnectionService(
+    userService: ref.watch(userServiceProvider),
+    chatService: ref.watch(chatServiceProvider),
+    notificationService: ref.watch(notificationServiceProvider),
+  );
+});

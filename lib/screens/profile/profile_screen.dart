@@ -5,6 +5,9 @@ import 'package:skill_swap/providers/auth_provider.dart';
 import 'package:skill_swap/routes/app_routes.dart';
 import 'package:skill_swap/theme/app_colors.dart';
 import 'package:skill_swap/widgets/common/skill_chip.dart';
+import 'package:skill_swap/widgets/premium/premium_badge_chip.dart';
+import 'package:skill_swap/widgets/premium/user_avatar_badge.dart';
+import 'package:skill_swap/widgets/premium/user_display_name.dart';
 
 /// Current user profile overview.
 class ProfileScreen extends ConsumerWidget {
@@ -27,25 +30,22 @@ class ProfileScreen extends ConsumerWidget {
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
-                    decoration: const BoxDecoration(
-                      gradient: AppColors.primaryGradient,
+                    decoration: BoxDecoration(
+                      gradient: user.showVerifiedBadge
+                          ? const LinearGradient(
+                              colors: [
+                                Color(0xFFF59E0B),
+                                Color(0xFFD97706),
+                                AppColors.primary,
+                              ],
+                            )
+                          : AppColors.primaryGradient,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const SizedBox(height: 40),
-                        CircleAvatar(
-                          radius: 48,
-                          backgroundColor: Colors.white,
-                          child: Text(
-                            user.name[0].toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
+                        UserAvatarBadge(user: user, radius: 48),
                       ],
                     ),
                   ),
@@ -64,8 +64,8 @@ class ProfileScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        user.name,
+                      UserDisplayName(
+                        user: user,
                         style: Theme.of(context)
                             .textTheme
                             .headlineSmall
@@ -76,6 +76,17 @@ class ProfileScreen extends ConsumerWidget {
                         user.experienceLevel,
                         style: TextStyle(color: Theme.of(context).hintColor),
                       ),
+                      if (user.showVerifiedBadge) ...[
+                        const SizedBox(height: 8),
+                        const PremiumBadgeChip(),
+                      ],
+                      if (!user.showVerifiedBadge) ...[
+                        const SizedBox(height: 16),
+                        _UpgradePremiumBanner(
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.premium),
+                        ),
+                      ],
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -120,6 +131,54 @@ class ProfileScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => const Center(child: Text('Error loading profile')),
+      ),
+    );
+  }
+}
+
+class _UpgradePremiumBanner extends StatelessWidget {
+  const _UpgradePremiumBanner({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFFF59E0B).withValues(alpha: 0.15),
+              AppColors.primary.withValues(alpha: 0.1),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF59E0B)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.workspace_premium, color: Color(0xFFD97706), size: 32),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Get Premium Badge',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'Verified icon + top profile visibility',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade600),
+          ],
+        ),
       ),
     );
   }

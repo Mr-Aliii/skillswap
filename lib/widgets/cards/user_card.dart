@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:skill_swap/core/constants/app_constants.dart';
 import 'package:skill_swap/models/user_model.dart';
 import 'package:skill_swap/theme/app_colors.dart';
 import 'package:skill_swap/widgets/common/skill_chip.dart';
+import 'package:skill_swap/widgets/premium/premium_badge_chip.dart';
+import 'package:skill_swap/widgets/premium/user_avatar_badge.dart';
+import 'package:skill_swap/widgets/premium/user_display_name.dart';
 
 /// Recommended / discover user card with hero support.
 class UserCard extends StatelessWidget {
@@ -13,15 +15,20 @@ class UserCard extends StatelessWidget {
     this.onTap,
     this.onConnect,
     this.heroTag,
+    this.matchedSkills = const [],
   });
 
   final UserModel user;
   final VoidCallback? onTap;
   final VoidCallback? onConnect;
   final String? heroTag;
+  /// Skills this user teaches that match current user's learning list.
+  final List<String> matchedSkills;
 
   @override
   Widget build(BuildContext context) {
+    final isPremium = user.showVerifiedBadge;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -31,9 +38,14 @@ class UserCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(AppConstants.radiusL),
+          border: isPremium
+              ? Border.all(color: const Color(0xFFF59E0B), width: 1.5)
+              : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: isPremium
+                  ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
+                  : Colors.black.withValues(alpha: 0.06),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -44,22 +56,14 @@ class UserCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Hero(
-                  tag: heroTag ?? 'avatar_${user.id}',
-                  child: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.2),
-                    child: Text(
-                      user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
+                UserAvatarBadge(
+                  user: user,
+                  radius: 24,
+                  heroTag: heroTag ?? 'avatar_${user.id}',
                 ),
                 const Spacer(),
-                if (user.isOnline)
+                if (isPremium) const PremiumBadgeChip(compact: true),
+                if (user.isOnline && !isPremium)
                   Container(
                     width: 10,
                     height: 10,
@@ -71,12 +75,7 @@ class UserCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Text(
-              user.name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            UserDisplayName(user: user, showPremiumChip: false),
             const SizedBox(height: 4),
             Row(
               children: [
@@ -89,7 +88,29 @@ class UserCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            if (user.skillsTeach.isNotEmpty)
+            if (matchedSkills.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primary, AppColors.accent],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Can teach: ${matchedSkills.join(', ')}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 4),
+            ]
+            else if (user.skillsTeach.isNotEmpty)
               SkillChip(label: user.skillsTeach.first, isTeach: true),
             const Spacer(),
             if (onConnect != null)
@@ -105,7 +126,7 @@ class UserCard extends StatelessWidget {
               ),
           ],
         ),
-      ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
+      ),
     );
   }
 }

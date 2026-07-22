@@ -47,6 +47,30 @@ class BookingModel {
         'createdAt': createdAt ?? DateTime.now(),
       };
 
+  BookingModel copyWith({
+    String? id,
+    String? requesterId,
+    String? hostId,
+    String? skill,
+    DateTime? date,
+    String? timeSlot,
+    String? status,
+    String? note,
+    DateTime? createdAt,
+  }) {
+    return BookingModel(
+      id: id ?? this.id,
+      requesterId: requesterId ?? this.requesterId,
+      hostId: hostId ?? this.hostId,
+      skill: skill ?? this.skill,
+      date: date ?? this.date,
+      timeSlot: timeSlot ?? this.timeSlot,
+      status: status ?? this.status,
+      note: note ?? this.note,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
   static DateTime? _parseDate(dynamic value) {
     if (value == null) return null;
     if (value is DateTime) return value;

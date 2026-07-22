@@ -6,25 +6,30 @@ import 'package:skill_swap/utils/dummy_data.dart';
 /// In-app notifications from Firestore.
 class NotificationService {
   FirebaseFirestore? get _firestore =>
-      AppConfig.useDemoMode ? null : FirebaseFirestore.instance;
+      AppConfig.isDemoMode ? null : FirebaseFirestore.instance;
 
   Future<List<NotificationModel>> getNotifications(String userId) async {
-    if (AppConfig.useDemoMode) {
+    if (AppConfig.isDemoMode) {
       await Future<void>.delayed(const Duration(milliseconds: 400));
       return DummyData.demoNotifications;
     }
     final snapshot = await _firestore!
         .collection(AppConfig.notificationsCollection)
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .get();
-    return snapshot.docs
+    final items = snapshot.docs
         .map((d) => NotificationModel.fromMap(d.data(), d.id))
         .toList();
+    items.sort((a, b) {
+      final aTime = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final bTime = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return bTime.compareTo(aTime);
+    });
+    return items;
   }
 
   Future<void> markAsRead(String notificationId) async {
-    if (AppConfig.useDemoMode) return;
+    if (AppConfig.isDemoMode) return;
     await _firestore!
         .collection(AppConfig.notificationsCollection)
         .doc(notificationId)

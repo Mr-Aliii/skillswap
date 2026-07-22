@@ -1,9 +1,11 @@
+import 'package:skill_swap/models/booking_model.dart';
 import 'package:skill_swap/models/chat_model.dart';
+import 'package:skill_swap/models/connection_request_model.dart';
 import 'package:skill_swap/models/notification_model.dart';
 import 'package:skill_swap/models/skill_model.dart';
 import 'package:skill_swap/models/user_model.dart';
 
-/// Demo data used when [AppConfig.useDemoMode] is enabled.
+/// Demo data used when [AppConfig.isDemoMode] is enabled.
 class DummyData {
   DummyData._();
 
@@ -14,7 +16,7 @@ class DummyData {
         email: 'demo@skillswap.app',
         name: 'Alex Morgan',
         bio: 'Passionate about design and always eager to learn new tech skills.',
-        skillsTeach: ['Graphic Design', 'UI/UX', 'Figma'],
+        skillsTeach: ['Graphic Design', 'UI/UX Design', 'Figma'],
         skillsLearn: ['Web Development', 'Flutter', 'Python'],
         experienceLevel: 'Advanced',
         isOnline: true,
@@ -22,50 +24,104 @@ class DummyData {
         sessionsCount: 24,
       );
 
-  static List<UserModel> get recommendedUsers => [
+  static final List<UserModel> recommendedUsers = [
+        // ─── PREMIUM USERS (3) ───
+        // #1 Premium – 3 teaching skills match, rating 4.9
         const UserModel(
           id: 'user_2',
           email: 'sarah@example.com',
           name: 'Sarah Chen',
-          bio: 'Full-stack developer teaching React & Node.',
-          skillsTeach: ['Web Development', 'JavaScript', 'React'],
-          skillsLearn: ['Graphic Design', 'UI/UX'],
+          bio: 'Full-stack developer who teaches Web, Flutter & Python.',
+          skillsTeach: ['Web Development', 'Flutter', 'Python'],
+          skillsLearn: ['UI/UX Design', 'Figma'],
           experienceLevel: 'Expert',
           isOnline: true,
           rating: 4.9,
           sessionsCount: 42,
+          isPremium: true,
+          isVerified: true,
+          premiumPlan: 'monthly',
         ),
+        // #2 Premium – 2 teaching skills match, rating 4.8
+        const UserModel(
+          id: 'user_4',
+          email: 'emma@example.com',
+          name: 'Emma Wilson',
+          bio: 'Flutter developer & web specialist.',
+          skillsTeach: ['Flutter', 'Web Development', 'Android Development'],
+          skillsLearn: ['Graphic Design', 'Photography'],
+          experienceLevel: 'Intermediate',
+          isOnline: true,
+          rating: 4.8,
+          sessionsCount: 31,
+          isPremium: true,
+          isVerified: true,
+          premiumPlan: 'yearly',
+        ),
+        // #3 Premium – 1 teaching skill match, rating 4.7
+        const UserModel(
+          id: 'user_7',
+          email: 'james@example.com',
+          name: 'James Kim',
+          bio: 'Python expert & open-source contributor.',
+          skillsTeach: ['Python', 'Data Science', 'Machine Learning'],
+          skillsLearn: ['UI/UX Design', 'Graphic Design'],
+          experienceLevel: 'Expert',
+          isOnline: false,
+          rating: 4.7,
+          sessionsCount: 55,
+          isPremium: true,
+          isVerified: true,
+          premiumPlan: 'monthly',
+        ),
+        // ─── NON-PREMIUM USERS (3+) ───
+        // #4 Non-premium – 3 teaching skills match
         const UserModel(
           id: 'user_3',
           email: 'mike@example.com',
           name: 'Mike Johnson',
-          bio: 'Digital marketer & growth hacker.',
-          skillsTeach: ['Marketing', 'SEO', 'Content Strategy'],
-          skillsLearn: ['Photography', 'Video Editing'],
+          bio: 'Full-stack mentor for Web, Flutter & Python.',
+          skillsTeach: ['Web Development', 'Flutter', 'Python'],
+          skillsLearn: ['Docker', 'Kubernetes'],
           experienceLevel: 'Advanced',
           isOnline: false,
           rating: 4.6,
           sessionsCount: 18,
         ),
+        // #5 Non-premium – 2 teaching skills match
         const UserModel(
-          id: 'user_4',
-          email: 'emma@example.com',
-          name: 'Emma Wilson',
-          bio: 'Piano teacher & music producer.',
-          skillsTeach: ['Piano', 'Music Theory', 'Ableton'],
-          skillsLearn: ['Spanish', 'French'],
-          experienceLevel: 'Intermediate',
+          id: 'user_6',
+          email: 'lisa@example.com',
+          name: 'Lisa Patel',
+          bio: 'Web & Flutter developer who loves mentoring.',
+          skillsTeach: ['Flutter', 'Web Development', 'React'],
+          skillsLearn: ['TypeScript', 'Node.js'],
+          experienceLevel: 'Advanced',
           isOnline: true,
-          rating: 4.7,
-          sessionsCount: 31,
+          rating: 4.5,
+          sessionsCount: 27,
         ),
+        // #6 Non-premium – 1 teaching skill match
+        const UserModel(
+          id: 'user_8',
+          email: 'priya@example.com',
+          name: 'Priya Sharma',
+          bio: 'Python developer & data enthusiast.',
+          skillsTeach: ['Python', 'Django', 'FastAPI'],
+          skillsLearn: ['Flutter', 'Web Development'],
+          experienceLevel: 'Advanced',
+          isOnline: true,
+          rating: 4.4,
+          sessionsCount: 22,
+        ),
+        // ─── OTHER USERS (no skill match with demo user) ───
         const UserModel(
           id: 'user_5',
           email: 'david@example.com',
           name: 'David Park',
           bio: 'Fitness coach & nutrition enthusiast.',
           skillsTeach: ['Fitness Training', 'Nutrition'],
-          skillsLearn: ['Photography', 'Video Editing'],
+          skillsLearn: ['Python', 'Video Editing'],
           experienceLevel: 'Expert',
           isOnline: true,
           rating: 4.5,
@@ -76,7 +132,7 @@ class DummyData {
   static List<SkillModel> get trendingSkills => [
         const SkillModel(
           id: 's1',
-          name: 'Flutter Development',
+          name: 'Flutter',
           category: 'Development',
           trending: true,
           learnersCount: 1280,
@@ -90,31 +146,35 @@ class DummyData {
         ),
         const SkillModel(
           id: 's3',
+          name: 'Python',
+          category: 'Development',
+          trending: true,
+          learnersCount: 1150,
+        ),
+        const SkillModel(
+          id: 's4',
           name: 'Digital Marketing',
           category: 'Marketing',
           trending: true,
           learnersCount: 750,
         ),
         const SkillModel(
-          id: 's4',
-          name: 'Spanish',
-          category: 'Language',
+          id: 's5',
+          name: 'React',
+          category: 'Development',
+          trending: true,
+          learnersCount: 890,
+        ),
+        const SkillModel(
+          id: 's6',
+          name: 'Machine Learning',
+          category: 'Development',
           trending: false,
           learnersCount: 620,
         ),
       ];
 
-  static List<ChatModel> get demoChats => [
-        ChatModel(
-          id: 'chat_1',
-          participantIds: [demoUserId, 'user_2'],
-          lastMessage: 'Sounds great! See you tomorrow at 3pm.',
-          lastMessageAt: DateTime.now().subtract(const Duration(minutes: 12)),
-          otherUserName: 'Sarah Chen',
-          otherUserId: 'user_2',
-          isOtherOnline: true,
-          unreadCount: 2,
-        ),
+  static final List<ChatModel> demoChats = [
         ChatModel(
           id: 'chat_2',
           participantIds: [demoUserId, 'user_3'],
@@ -127,14 +187,29 @@ class DummyData {
         ),
       ];
 
-  static List<NotificationModel> get demoNotifications => [
+  static final List<ConnectionRequestModel> demoConnectionRequests = [
+    ConnectionRequestModel(
+      id: 'user_2_demo_user_1',
+      senderId: 'user_2',
+      receiverId: demoUserId,
+      status: 'pending',
+      createdAt: DateTime.now().subtract(const Duration(hours: 1)),
+    ),
+  ];
+
+  static final List<NotificationModel> demoNotifications = [
         NotificationModel(
           id: 'n1',
           userId: demoUserId,
-          title: 'New Match!',
-          body: 'Sarah Chen wants to exchange skills with you.',
-          type: 'match',
+          title: 'Connection Request',
+          body: 'Sarah Chen wants to connect with you.',
+          type: 'connection_request',
           createdAt: DateTime.now().subtract(const Duration(hours: 1)),
+          data: const {
+            'connectionRequestId': 'user_2_demo_user_1',
+            'senderId': 'user_2',
+            'senderName': 'Sarah Chen',
+          },
         ),
         NotificationModel(
           id: 'n2',
@@ -151,6 +226,31 @@ class DummyData {
           body: 'Your skill exchange request was accepted!',
           type: 'request',
           isRead: true,
+          createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        ),
+      ];
+
+  static final List<BookingModel> demoBookings = [
+        BookingModel(
+          id: 'booking_1',
+          requesterId: 'user_3',
+          hostId: demoUserId,
+          skill: 'Graphic Design',
+          date: DateTime.now().add(const Duration(days: 2)),
+          timeSlot: '10:00 AM',
+          status: 'pending',
+          note: 'Would love to learn Figma basics!',
+          createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+        ),
+        BookingModel(
+          id: 'booking_2',
+          requesterId: demoUserId,
+          hostId: 'user_2',
+          skill: 'Flutter Development',
+          date: DateTime.now().add(const Duration(days: 5)),
+          timeSlot: '2:00 PM',
+          status: 'confirmed',
+          note: 'Excited to learn about state management!',
           createdAt: DateTime.now().subtract(const Duration(days: 1)),
         ),
       ];

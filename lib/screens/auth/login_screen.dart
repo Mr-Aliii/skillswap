@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:skill_swap/config/app_config.dart';
 import 'package:skill_swap/core/errors/app_exception.dart';
 import 'package:skill_swap/core/extensions/context_extensions.dart';
 import 'package:skill_swap/providers/auth_provider.dart';
@@ -77,6 +78,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   'Sign in to continue exchanging skills',
                   style: TextStyle(color: context.theme.hintColor),
                 ),
+                if (AppConfig.isDemoMode) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF2FF),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'Demo mode: use any email and password to explore the app.',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF4F46E5)),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 32),
                 AppTextField(
                   controller: _emailController,

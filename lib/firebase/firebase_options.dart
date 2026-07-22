@@ -4,10 +4,7 @@ import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
-/// Default [FirebaseOptions] for SkillSwap.
-///
-/// Run `dart pub global activate flutterfire_cli` then `flutterfire configure`
-/// to replace these placeholder values with your project credentials.
+/// Firebase options for project: skillswap-3e33f
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -28,37 +25,37 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR_WEB_API_KEY',
-    appId: 'YOUR_WEB_APP_ID',
-    messagingSenderId: 'YOUR_SENDER_ID',
-    projectId: 'skillswap-app',
-    authDomain: 'skillswap-app.firebaseapp.com',
-    storageBucket: 'skillswap-app.appspot.com',
+    apiKey: 'AIzaSyDbkCbeANZzjYhLRo6r7UfTq-hHrRRfPtE',
+    appId: '1:2081006226:web:2dda5dceaf8efb1d2cbc4b',
+    messagingSenderId: '2081006226',
+    projectId: 'skillswap-3e33f',
+    authDomain: 'skillswap-3e33f.firebaseapp.com',
+    storageBucket: 'skillswap-3e33f.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_ANDROID_API_KEY',
-    appId: 'YOUR_ANDROID_APP_ID',
-    messagingSenderId: 'YOUR_SENDER_ID',
-    projectId: 'skillswap-app',
-    storageBucket: 'skillswap-app.appspot.com',
+    apiKey: 'AIzaSyDbkCbeANZzjYhLRo6r7UfTq-hHrRRfPtE',
+    appId: '1:2081006226:android:ddab812f8892d4a62cbc4b',
+    messagingSenderId: '2081006226',
+    projectId: 'skillswap-3e33f',
+    storageBucket: 'skillswap-3e33f.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'YOUR_IOS_API_KEY',
-    appId: 'YOUR_IOS_APP_ID',
-    messagingSenderId: 'YOUR_SENDER_ID',
-    projectId: 'skillswap-app',
-    storageBucket: 'skillswap-app.appspot.com',
+    apiKey: 'AIzaSyDbkCbeANZzjYhLRo6r7UfTq-hHrRRfPtE',
+    appId: '1:2081006226:android:ddab812f8892d4a62cbc4b',
+    messagingSenderId: '2081006226',
+    projectId: 'skillswap-3e33f',
+    storageBucket: 'skillswap-3e33f.firebasestorage.app',
     iosBundleId: 'com.skillswap.skillSwap',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'YOUR_MACOS_API_KEY',
-    appId: 'YOUR_MACOS_APP_ID',
-    messagingSenderId: 'YOUR_SENDER_ID',
-    projectId: 'skillswap-app',
-    storageBucket: 'skillswap-app.appspot.com',
+    apiKey: 'AIzaSyDbkCbeANZzjYhLRo6r7UfTq-hHrRRfPtE',
+    appId: '1:2081006226:android:ddab812f8892d4a62cbc4b',
+    messagingSenderId: '2081006226',
+    projectId: 'skillswap-3e33f',
+    storageBucket: 'skillswap-3e33f.firebasestorage.app',
     iosBundleId: 'com.skillswap.skillSwap',
   );
 }
